@@ -28,7 +28,7 @@ class SpeechAudioProcessor:
         convert input speech audio to slice with duration of
         audio_slice_duration, resample audio if needed
         """
-        
+
         if self._current_audio.speech_id != speech_audio.speech_id:
             # new speech, extend this to audio slice duration,
             # so that algo can start immediately
@@ -39,10 +39,11 @@ class SpeechAudioProcessor:
 
                 target_length = int(2 * speech_audio.sample_rate * self._audio_slice_duration)
                 padding_length = target_length - len(audio_data)
+                print(f"{target_length=} {len(audio_data)=}")
                 audio_data = bytes(padding_length) + audio_data
-                
+
                 padding_duration = padding_length / 2 / speech_audio.sample_rate
-                
+
                 audio_slice = self._create_audio_slice(
                     speech_id=speech_audio.speech_id,
                     play_audio_data=audio_data,
@@ -54,7 +55,7 @@ class SpeechAudioProcessor:
                 return [audio_slice]
         else:
             self._extend_current_audio(speech_audio)
-        
+
         logger.info("input speech audio {}, end of speech {}, duration {:.3f}s, current audio length {}",
                     speech_audio.speech_id, speech_audio.end_of_speech, speech_audio.get_audio_duration(),
                     len(self._current_audio.audio_data))
@@ -119,10 +120,11 @@ class SpeechAudioProcessor:
                                  sample_rate: int,
                                  duration: int,
                                  padding_front: bool):
+        print(f"{sample_rate=} {duration=} {padding_front=}")
         target_length = int(2 * sample_rate * duration)
         padding_length = target_length - len(audio_data)
         if padding_length < 0:
-            return audio_data
+            return audio_data, 0
         if padding_front:
             audio_data = bytes(padding_length) + audio_data
         else:

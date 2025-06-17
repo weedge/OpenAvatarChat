@@ -24,7 +24,7 @@ class BaseAlgoAdapter(ABC):
         pass
 
     @abstractmethod
-    def mouth2full(self, mouth_image: np.ndarray, bg_frame_id: int) -> np.ndarray:
+    def mouth2full(self, mouth_image: np.ndarray, bg_frame_id: int, use_bg=False) -> np.ndarray:
         pass
 
     @abstractmethod

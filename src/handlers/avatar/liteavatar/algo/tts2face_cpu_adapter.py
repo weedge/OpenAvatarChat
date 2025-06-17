@@ -95,7 +95,7 @@ class Tts2faceCpuAdapter(BaseAlgoAdapter):
             shutil.unpack_archive(avatar_zip_path, extract_dir)
         assert os.path.exists(avatar_data_dir)
         return avatar_data_dir
-    
+
     def _download_from_modelscope(self, avatar_name: str) -> str:
         """
         download avatar data from modelscope to resource/avatar/liteavatar
@@ -107,9 +107,13 @@ class Tts2faceCpuAdapter(BaseAlgoAdapter):
         avatar_zip_path = os.path.join(avatar_dir, avatar_name)
         if not os.path.exists(avatar_zip_path):
             cmd = [
-                "modelscope", "download", "--model", "HumanAIGC-Engineering/LiteAvatarGallery", avatar_name,
-                "--local_dir", avatar_dir
-                ]
+                "modelscope",
+                "download",
+                "--model",
+                "HumanAIGC-Engineering/LiteAvatarGallery",
+                avatar_name,
+                "--local_dir",
+                avatar_dir]
             logger.info("download avatar data from modelscope, cmd: {}", " ".join(cmd))
             sp.run(cmd)
         return avatar_zip_path
@@ -122,7 +126,7 @@ class Tts2faceCpuAdapter(BaseAlgoAdapter):
         algo_dir = os.path.join(self.handler_root, "algo", "liteavatar")
         sys.path.insert(0, algo_dir)
         os.chdir(algo_dir)
-        
+
     def warm_up(self):
         for i in range(5):
             self.tts2face.audio2param(bytes(16000 * 2))

@@ -26,8 +26,8 @@ class AvatarProcessor:
     def __init__(self,
                  algo_adapter: BaseAlgoAdapter,
                  init_option: AvatarInitOption):
-        
-        ## TODO remove debugger logger
+
+        # TODO remove debugger logger
         logger.remove()
         logger.add(sys.stdout, level='INFO')
 
@@ -140,7 +140,8 @@ class AvatarProcessor:
             target_round_time = audio_slice.get_audio_duration() - front_padding_duration - 0.1
             padding_frame_count = int(front_padding_duration * self._init_option.video_frame_rate)
             signal_vals = signal_vals[padding_frame_count:]
-            padding_audio_count = int(front_padding_duration) * self._init_option.audio_sample_rate * 2
+            padding_audio_count = int(front_padding_duration) * \
+                self._init_option.audio_sample_rate * 2
             audio_slice.play_audio_data = audio_slice.play_audio_data[padding_audio_count:]
 
             audio_slice.play_audio_data = self._video_audio_aligner.get_speech_level_algined_audio(
@@ -173,10 +174,10 @@ class AvatarProcessor:
         logger.info("signal2img loop started")
         start_time = -1
         timestamp = 0
-        
+
         # delay start to ensure no extra audio and video generated
         time.sleep(0.5)
-        
+
         while self._session_running:
             if self._signal_queue.empty():
                 # generate idle
@@ -193,7 +194,8 @@ class AvatarProcessor:
             else:
                 signal: SignalResult = self._signal_queue.get_nowait()
 
-            out_image, bg_frame_id = self._algo_adapter.signal2img(signal.middle_data, signal.avatar_status)
+            out_image, bg_frame_id = self._algo_adapter.signal2img(
+                signal.middle_data, signal.avatar_status)
             # create mouth result
             mouth_result = MouthResult(
                 speech_id=signal.speech_id,
@@ -204,7 +206,7 @@ class AvatarProcessor:
                 audio_slice=signal.audio_slice,
                 global_frame_id=self._global_frame_count
             )
-            
+
             self._global_frame_count += 1
 
             self._mouth_img_queue.put(mouth_result)
@@ -230,7 +232,7 @@ class AvatarProcessor:
             image = mouth_reusult.mouth_image
             bg_frame_id = mouth_reusult.bg_frame_id
             full_img = self._algo_adapter.mouth2full(image, bg_frame_id)
-            
+
             if mouth_reusult.audio_slice is not None:
                 # create audio result
                 audio_data = mouth_reusult.audio_slice.play_audio_data
@@ -250,14 +252,16 @@ class AvatarProcessor:
                     speech_id=mouth_reusult.audio_slice.speech_id
                 )
                 self._callback_audio(audio_result)
-                logger.debug("create audio with duration {:.3f}s, status: {}",
-                             mouth_reusult.audio_slice.get_audio_duration(), mouth_reusult.avatar_status)
+                logger.debug(
+                    "create audio with duration {:.3f}s, status: {}",
+                    mouth_reusult.audio_slice.get_audio_duration(),
+                    mouth_reusult.avatar_status)
             # create video result
             if self._debug_mode:
                 full_img = cv2.putText(
                     full_img, f"{mouth_reusult.avatar_status} {mouth_reusult.global_frame_id}",
                     (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-            full_img = cv2.flip(full_img, 1)
+            # full_img = cv2.flip(full_img, 1)
             video_frame = av.VideoFrame.from_ndarray(full_img, format="bgr24")
             video_frame.time_base = Fraction(1, self._init_option.video_frame_rate)
             video_frame.pts = self._current_video_pts
@@ -272,11 +276,12 @@ class AvatarProcessor:
             )
 
             self._callback_image(image_result)
-            
+
             if self._callback_avatar_status != image_result.avatar_status and self._callback_avatar_status is not None:
-                self._callback_avatar_status_changed(mouth_reusult.speech_id, image_result.avatar_status)
+                self._callback_avatar_status_changed(
+                    mouth_reusult.speech_id, image_result.avatar_status)
             self._callback_avatar_status = image_result.avatar_status
-            
+
         logger.info("combine img loop ended")
 
     def _reset_processor_status(self):
@@ -290,7 +295,8 @@ class AvatarProcessor:
             algo_config.input_audio_slice_duration,
             enable_fast_mode=self._init_option.enable_fast_mode
         )
-        self._audio2signal_speed_limiter = Audio2SignalSpeedLimiter(self._init_option.video_frame_rate)
+        self._audio2signal_speed_limiter = Audio2SignalSpeedLimiter(
+            self._init_option.video_frame_rate)
         self._video_audio_aligner = VideoAudioAligner(self._init_option.video_frame_rate)
 
     def _init_algo(self):
@@ -313,7 +319,10 @@ class AvatarProcessor:
 
     def _callback_audio(self, audio_result: AudioResult):
         audio_frame = audio_result.audio_frame
-        self._callback_counter.add_property("callback_audio", audio_frame.samples / audio_frame.sample_rate)
+        self._callback_counter.add_property(
+            "callback_audio",
+            audio_frame.samples /
+            audio_frame.sample_rate)
         if self._session_running:
             for output_handler in self._output_handlers:
                 output_handler.on_audio(audio_result)
@@ -329,7 +338,7 @@ class AvatarProcessor:
     def _callback_avatar_status_changed(self, speech_id, avatar_status: AvatarStatus):
         for output_handler in self._output_handlers:
             output_handler.on_avatar_status_change(speech_id, avatar_status)
-            
+
     def _get_idle_audio_slice(self, idle_frame_count):
         speech_id = "" if self._last_speech_ended else self._current_speech_id
         # generate silence audio

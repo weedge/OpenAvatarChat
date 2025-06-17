@@ -2,9 +2,9 @@ from fractions import Fraction
 import os
 import av
 from loguru import logger
-from handlers.avatar.liteavatar.avatar_output_handler import AvatarOutputHandler
-from handlers.avatar.liteavatar.model import AudioResult, AvatarInitOption, VideoResult
-from engine_utils.directory_info import DirectoryInfo
+from src.handlers.avatar.liteavatar.avatar_output_handler import AvatarOutputHandler
+from src.handlers.avatar.liteavatar.model.algo_model import AudioResult, AvatarInitOption, VideoResult, AvatarStatus
+from src.engine_utils.directory_info import DirectoryInfo
 
 
 class SampleOutputHandler(AvatarOutputHandler):
@@ -12,6 +12,7 @@ class SampleOutputHandler(AvatarOutputHandler):
     def __init__(self):
         super().__init__()
         output_path = os.path.join(DirectoryInfo.get_project_dir(), 'sample_output.mp4')
+        print(f"{output_path=}")
         self.output_container = av.open(output_path, mode='w')
         self.video_stream = None
         self.audio_stream = None
@@ -19,8 +20,9 @@ class SampleOutputHandler(AvatarOutputHandler):
         self._init_option: AvatarInitOption = None
 
     def on_audio(self, audio_result: AudioResult):
-        logger.info("receive audio result {:.3f}",
-                    audio_result.audio_frame.pts * audio_result.audio_frame.time_base)
+        audio_res = audio_result.audio_frame.pts * float(audio_result.audio_frame.time_base)
+        print(f"{audio_res=}")
+        logger.info("receive audio result {:.3f}", audio_res)
         audio_frame = audio_result.audio_frame
         if self.audio_stream is None:
             self.audio_stream = self.output_container.add_stream(
@@ -39,8 +41,10 @@ class SampleOutputHandler(AvatarOutputHandler):
             logger.warning(e)
 
     def on_video(self, video_result: VideoResult):
+        video_res = video_result.video_frame.pts * float(video_result.video_frame.time_base)
+        print(f"{video_res=}")
         logger.info("receive image result {:.3f} with status {}",
-                    video_result.video_frame.pts * video_result.video_frame.time_base,
+                    video_res,
                     video_result.avatar_status)
         video_frame = video_result.video_frame
         if self.video_stream is None:
@@ -68,3 +72,7 @@ class SampleOutputHandler(AvatarOutputHandler):
             self.output_container.mux(packet)
         self.output_container.close()
         logger.info("sample handler stopped")
+
+    def on_avatar_status_change(self, speech_id, avatar_status: AvatarStatus):
+        logger.info("speech_id {} avatar_status {}", speech_id, avatar_status)
+        pass
