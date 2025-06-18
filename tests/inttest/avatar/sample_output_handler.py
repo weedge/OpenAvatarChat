@@ -27,9 +27,9 @@ class SampleOutputHandler(AvatarOutputHandler):
         if self.audio_stream is None:
             self.audio_stream = self.output_container.add_stream(
                 'aac', rate=self._init_option.audio_sample_rate)
-            self.audio_stream.channels = 1
-            self.audio_stream.layout = "mono"
-            self.audio_stream.time_base = Fraction(1, self._init_option.audio_sample_rate)
+            # self.audio_stream.channels = 1
+            # self.audio_stream.layout = "mono"
+            # self.audio_stream.time_base = Fraction(1, self._init_option.audio_sample_rate)
 
         assert audio_frame.pts > self._last_audio_pts
         self._last_audio_pts = audio_frame.pts

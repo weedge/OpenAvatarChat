@@ -54,7 +54,7 @@ class AvatarDemo:
         audio_bytes, sample_rate = AudioUtils.read_wav_to_bytes(test_input_file_path)
         processor.add_audio(SpeechAudio(
             audio_data=audio_bytes,
-            speech_id="2",
+            speech_id="1",
             end_of_speech=True,
             sample_rate=sample_rate))
         time.sleep(40)
