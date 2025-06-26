@@ -10,7 +10,6 @@ from tqdm import tqdm
 import copy
 import sys
 from transformers import WhisperModel
-import argparse
 import shutil
 import json
 import pickle
@@ -19,6 +18,7 @@ import builtins
 from pydantic import BaseModel
 import librosa
 from loguru import logger
+import argparse
 
 # Add MuseTalk module path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -35,10 +35,10 @@ from handlers.avatar.liteavatar.model.audio_input import SpeechAudio
 from handlers.avatar.musetalk.musetalk_utils_preprocessing import get_landmark_and_bbox
 
 # Now you can correctly import MuseTalk modules
-from musetalk.utils.face_parsing import FaceParsing
-from musetalk.utils.utils import datagen, load_all_model
-from musetalk.utils.blending import get_image_prepare_material, get_image_blending
-from musetalk.utils.audio_processor import AudioProcessor
+from MuseTalk.musetalk.utils.face_parsing import FaceParsing
+from MuseTalk.musetalk.utils.utils import datagen, load_all_model
+from MuseTalk.musetalk.utils.blending import get_image_prepare_material, get_image_blending
+from MuseTalk.musetalk.utils.audio_processor import AudioProcessor
 
 builtins.input = lambda prompt='': "y"
 
@@ -364,6 +364,7 @@ class MuseAvatarV15:
             if self.version == "v15":
                 y2 = y2 + self.extra_margin  # Add extra chin area
                 y2 = min(y2, frame.shape[0])  # Ensure not out of image boundary
+                y1 = max(y1, 0)  # Ensure not out of image boundary
                 coord_list[idx] = [x1, y1, x2, y2]  # Update bbox in coord_list
                 
             # Crop face region and resize to 256x256
@@ -974,6 +975,7 @@ def run_realtime_test(args):
 
 # Run main function
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
     parser.add_argument("--version", type=str, default="v15", choices=["v1", "v15"], help="MuseTalk version")
     parser.add_argument("--ffmpeg_path", type=str, default="./ffmpeg-4.4-amd64-static/", help="ffmpeg path")
     parser.add_argument("--gpu_id", type=int, default=0, help="GPU id")

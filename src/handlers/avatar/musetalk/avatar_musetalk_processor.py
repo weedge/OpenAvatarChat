@@ -70,7 +70,7 @@ class AvatarMuseTalkProcessor:
             self._frame_gen_thread.start()
             self._frame_collect_thread.start()
             self._compose_thread.start()
-            logger.info(f"MuseProcessor started.")
+            logger.info(f"{__name__} started.")
         except Exception as e:
             logger.opt(exception=True).error(f"Exception during thread start: {e}")
 
