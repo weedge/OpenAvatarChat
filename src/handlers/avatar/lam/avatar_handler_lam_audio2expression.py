@@ -81,6 +81,7 @@ class HandlerAvatarLAM(HandlerBase):
             }
         })
         cfg = default_setup(cfg)
+        print(cfg)
         self.infer = INFER.build(dict(type=cfg.infer.type, cfg=cfg))
         self.infer.model.eval()
         arkit_channel_list_path = os.path.join(self.handler_root, "assets", "arkit_face_channels.txt")
