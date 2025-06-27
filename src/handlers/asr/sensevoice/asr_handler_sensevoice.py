@@ -84,10 +84,15 @@ class HandlerASR(HandlerBase, ABC):
             inputs=inputs, outputs=outputs,
         )
 
-    def load(self, engine_config: ChatEngineConfigModel, handler_config: Optional[BaseModel] = None):
+    def load(self, engine_config: ChatEngineConfigModel,
+             handler_config: Optional[BaseModel] = None):
         if isinstance(handler_config, ASRConfig):
             self.model_name = handler_config.model_name
-
+        project_dir = DirectoryInfo.get_project_dir()
+        self.model_name = os.path.join(
+            project_dir,
+            engine_config.model_root,
+            self.model_name)
         self.model = AutoModel(model=self.model_name, disable_update=True)
 
     def create_context(self, session_context, handler_config=None):
@@ -96,7 +101,7 @@ class HandlerASR(HandlerBase, ABC):
         context = ASRContext(session_context.session_info.session_id)
         context.shared_states = session_context.shared_states
         return context
-    
+
     def start_context(self, session_context, handler_context):
         pass
 
@@ -130,9 +135,8 @@ class HandlerASR(HandlerBase, ABC):
         remainder_audio = context.audio_slice_context.flush()
         if remainder_audio is not None:
             if remainder_audio.shape[0] < context.audio_slice_context.slice_size:
-                remainder_audio = np.concatenate(
-                    [remainder_audio,
-                     np.zeros(shape=(context.audio_slice_context.slice_size - remainder_audio.shape[0]))])
+                remainder_audio = np.concatenate([remainder_audio, np.zeros(
+                    shape=(context.audio_slice_context.slice_size - remainder_audio.shape[0]))])
                 context.output_audios.append(remainder_audio)
         output_audio = np.concatenate(context.output_audios)
         if context.audio_dump_file is not None:
