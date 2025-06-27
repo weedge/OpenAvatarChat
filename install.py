@@ -35,6 +35,7 @@ def parse_args():
 
 def load_configs(in_args):
     base_dir = DirectoryInfo.get_project_dir()
+    print(f"{base_dir=}")
     config_path = Path(in_args.config) if os.path.isabs(in_args.config) \
         else Path(base_dir) / in_args.config
 
@@ -96,9 +97,11 @@ def install_files(file_paths, use_uv=False):
                 cmd = [sys.executable, "-m", "pip", "install", "-r", str(dep_file)]
 
             print(f"{cmd=}")
-            subprocess.run(cmd, check=True)
+            result = subprocess.run(cmd, check=True, stderr=subprocess.PIPE, text=True)
+            print(result.stderr)
     except subprocess.CalledProcessError as e:
         print(f"Installation failed: {e}")
+        print("err:", e.stderr)
         sys.exit(1)
 
 
