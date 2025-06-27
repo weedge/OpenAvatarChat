@@ -27,7 +27,7 @@ default:
       MiniCPM-o:
         enabled: True
         module: llm/minicpm/llm_handler_minicpm
-        model_name: "openbmb/MiniCPM-o-2_6"
+        model_name: "openbmb/MiniCPM-o-2_6-int4"
         voice_prompt: "你是一个AI助手。你能接受视频，音频和文本输入并输出语音和文本。模仿输入音频中的声音特征。"
         assistant_prompt: "作为助手，你将使用这种声音风格说话。"
         enable_video_input: True
