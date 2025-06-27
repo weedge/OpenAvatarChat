@@ -1,3 +1,4 @@
+import os
 from typing import Type
 
 from pydantic import BaseModel
@@ -28,8 +29,8 @@ class TwilioTurnProvider(BaseRtcTurnProvider):
         from twilio.rest import Client
         result = TwilioTurnEntity()
         result.client = Client(
-            config.twilio_account_sid,
-            config.twilio_auth_token
+            config.twilio_account_sid or os.environ.get("TWILIO_ACCOUNT_SID"),
+            config.twilio_auth_token or os.environ.get("TWILIO_AUTH_TOKEN"),
         )
         result.token = result.client.tokens.create()
         result.rtc_configuration = {

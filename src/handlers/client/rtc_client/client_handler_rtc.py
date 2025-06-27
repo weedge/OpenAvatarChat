@@ -7,6 +7,7 @@ import numpy as np
 from fastapi import FastAPI
 # noinspection PyPackageRequirements
 from fastrtc import WebRTC
+import fastrtc
 
 from pydantic import BaseModel, Field
 

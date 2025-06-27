@@ -16,6 +16,8 @@ default:
         module: client/h5_rendering_client/client_handler_lam
         asset_path: "lam_samples/barbara.zip"
         concurrent_limit: 5
+        turn_config:
+          turn_provider: "twilio"
       SileroVad:
         enabled: True
         module: vad/silerovad/vad_handler_silero
