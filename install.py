@@ -2,7 +2,6 @@ import argparse
 import os
 import subprocess
 import sys
-from collections import defaultdict
 from pathlib import Path
 
 import yaml
@@ -12,14 +11,21 @@ from src.engine_utils.directory_info import DirectoryInfo
 
 def is_venv_active():
     """Check if running inside a virtual environment"""
-    return hasattr(sys, 'real_prefix') or (
-        hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix) or (os.getenv('VIRTUAL_ENV') is not None)
+    return hasattr(
+        sys,
+        'real_prefix') or (
+        hasattr(
+            sys,
+            'base_prefix') and sys.base_prefix != sys.prefix) or (
+                os.getenv('VIRTUAL_ENV') is not None)
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, default="config/chat_with_minicpm.yaml",
                         help="Path to config file")
+    parser.add_argument("--venv", action="store_true",
+                        help="create virtual environment")
     parser.add_argument("--uv", action="store_true",
                         help="Use uv pip compiler instead of standard pip")
     parser.add_argument("--skip-core", action="store_true",
@@ -89,6 +95,7 @@ def install_files(file_paths, use_uv=False):
             else:
                 cmd = [sys.executable, "-m", "pip", "install", "-r", str(dep_file)]
 
+            print(f"{cmd=}")
             subprocess.run(cmd, check=True)
     except subprocess.CalledProcessError as e:
         print(f"Installation failed: {e}")
@@ -96,13 +103,13 @@ def install_files(file_paths, use_uv=False):
 
 
 if __name__ == "__main__":
+    args = parse_args()
     # Check virtual environment first
-    if not is_venv_active():
+    if args.venv is True and not is_venv_active():
         print("Error: Not running in a virtual environment.")
         print("Create and activate a venv first.")
         sys.exit(1)
 
-    args = parse_args()
     config = load_configs(args)
 
     # Collect dependency files
