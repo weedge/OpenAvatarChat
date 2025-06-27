@@ -62,6 +62,7 @@ class LamClientSessionDelegate(RtcClientSessionDelegate):
             except Exception as e:
                 logger.error(f"Error processing messages: {e}")
                 traceback.print_exc()
+                continue
 
     async def _ws_input_task(self, websocket: WebSocket):
         while not self.quit.is_set() and websocket.client_state != WebSocketState.DISCONNECTED:
