@@ -9,7 +9,7 @@ from service.service_data_models.logger_config_data import LoggerConfigData
 from service.service_data_models.service_config_data import ServiceConfigData
 
 
-def load_configs(env, config_path):
+def load_configs(config_path, env="default"):
     os.environ["ENV_FOR_DYNACONF"] = env
     base_dir = DirectoryInfo.get_project_dir()
     if not os.path.isabs(config_path):

@@ -67,7 +67,7 @@ def setup_demo():
 
 def main():
     args = parse_args()
-    logger_config, service_config, engine_config = load_configs(args.env,args.config)
+    logger_config, service_config, engine_config = load_configs(args.config, args.env)
 
 
     # 设置modelscope的默认下载地址
