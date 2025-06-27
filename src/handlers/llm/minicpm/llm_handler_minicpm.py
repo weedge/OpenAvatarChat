@@ -135,7 +135,9 @@ class HandlerS2SMiniCPM(HandlerBase, ABC):
             model_name = handler_config.model_name
         project_dir = DirectoryInfo.get_project_dir()
         model_path = os.path.join(project_dir, engine_config.model_root, model_name)
-        logger.info(f"model_name = {model_name}")
+        gpu_prop = torch.cuda.get_device_properties("cuda")
+        attn_implementation="flash_attention_2" if gpu_prop.major >= 8 else "sdpa",
+        logger.info(f"model_name = {model_name} {attn_implementation=}")
         if "MiniCPM-o-2_6-int4" in model_name:
             # noinspection PyUnresolvedReferences
             logger.warning(f"python path: {sys.path}")
@@ -153,6 +155,7 @@ class HandlerS2SMiniCPM(HandlerBase, ABC):
                 torch_dtype=torch.bfloat16,
                 device=self.device,
                 trust_remote_code=True,
+                attn_implementation=attn_implementation,
                 disable_exllama=True,
                 disable_exllamav2=True
             )
@@ -162,7 +165,7 @@ class HandlerS2SMiniCPM(HandlerBase, ABC):
                     model_path,
                     trust_remote_code=True,
                     torch_dtype=torch.bfloat16,
-                    attn_implementation='sdpa',
+                    attn_implementation=attn_implementation,
                 )
         self.tokenizer = AutoTokenizer.from_pretrained(
             model_path,
