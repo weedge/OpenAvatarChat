@@ -4,5 +4,9 @@ version = "0.1.0"
 requires-python = ">=3.10, <3.13"
 dependencies = [
     "onnxruntime~=1.20.1",
-    "onnxruntime-gpu~=1.20.1"
+    "onnxruntime-gpu~=1.20.1",
+    "vector-quantize-pytorch~=1.18.5",
+    "vocos~=0.1.0",
+    "decord",
+    "moviepy",
 ]

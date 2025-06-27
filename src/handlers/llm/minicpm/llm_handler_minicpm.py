@@ -135,6 +135,7 @@ class HandlerS2SMiniCPM(HandlerBase, ABC):
             model_name = handler_config.model_name
         project_dir = DirectoryInfo.get_project_dir()
         model_path = os.path.join(project_dir, engine_config.model_root, model_name)
+        logger.info(f"model_name = {model_name}")
         if "MiniCPM-o-2_6-int4" in model_name:
             # noinspection PyUnresolvedReferences
             logger.warning(f"python path: {sys.path}")
