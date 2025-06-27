@@ -46,7 +46,7 @@ class LamClientSessionDelegate(RtcClientSessionDelegate):
         while not self.quit.is_set():
             try:
                 chat_data: ChatData = await asyncio.wait_for(self.get_data(EngineChannelType.MOTION_DATA), timeout=0.1)
-                logger.info(f"Got chat data {str(chat_data)}")
+                chat_data.data and logger.info(f"Got chat data {str(chat_data)} {str(chat_data.data)}")
             except asyncio.TimeoutError:
                 continue
             if not welcome_message_sent:

@@ -46,7 +46,8 @@ class HandlerAvatarLAM(HandlerBase):
             config_model=AvatarLAMConfig
         )
 
-    def load(self, engine_config: ChatEngineConfigModel, handler_config: Optional[HandlerBaseConfigModel] = None):
+    def load(self, engine_config: ChatEngineConfigModel,
+             handler_config: Optional[HandlerBaseConfigModel] = None):
         if not isinstance(handler_config, AvatarLAMConfig):
             handler_config = AvatarLAMConfig()
         algo_module_path = os.path.join(self.handler_root, "LAM_Audio2Expression")
@@ -59,11 +60,14 @@ class HandlerAvatarLAM(HandlerBase):
         from .LAM_Audio2Expression.engines.infer import INFER
         project_dir = DirectoryInfo.get_project_dir()
         model_path = os.path.join(project_dir, engine_config.model_root, handler_config.model_name)
-        wav2vec_path = os.path.join(project_dir, engine_config.model_root, handler_config.feature_extractor_model_name)
+        wav2vec_path = os.path.join(
+            project_dir,
+            engine_config.model_root,
+            handler_config.feature_extractor_model_name)
         config_file = os.path.join(self.handler_root, "LAM_Audio2Expression",
                                    "configs", "lam_audio2exp_config_streaming.py")
         wav2vec_config_file = os.path.join(self.handler_root, "LAM_Audio2Expression",
-                                   "configs", "wav2vec2_config.json")
+                                           "configs", "wav2vec2_config.json")
         weight_path = os.path.join(model_path, "pretrained_models", "lam_audio2exp_streaming.tar")
 
         weight_path = weight_path.replace("\\", "/")
@@ -84,7 +88,8 @@ class HandlerAvatarLAM(HandlerBase):
         print(cfg)
         self.infer = INFER.build(dict(type=cfg.infer.type, cfg=cfg))
         self.infer.model.eval()
-        arkit_channel_list_path = os.path.join(self.handler_root, "assets", "arkit_face_channels.txt")
+        arkit_channel_list_path = os.path.join(
+            self.handler_root, "assets", "arkit_face_channels.txt")
         self.arkit_channels.clear()
         for line in open(arkit_channel_list_path, "r"):
             self.arkit_channels.append(line.strip())
@@ -113,7 +118,8 @@ class HandlerAvatarLAM(HandlerBase):
         )
         return context
 
-    def get_handler_detail(self, session_context: SessionContext, context: HandlerContext) -> HandlerDetail:
+    def get_handler_detail(self, session_context: SessionContext,
+                           context: HandlerContext) -> HandlerDetail:
         context = cast(AvatarLAMContext, context)
         definition = DataBundleDefinition()
         definition.add_entry(DataBundleEntry.create_framed_entry(
@@ -153,6 +159,7 @@ class HandlerAvatarLAM(HandlerBase):
                output_definitions: Dict[ChatDataType, HandlerDataInfo]):
         output_definition = output_definitions.get(ChatDataType.AVATAR_MOTION_DATA).definition
         context = cast(AvatarLAMContext, context)
+        inputs.data and logger.info(f"{__name__} input_data: {str(inputs.data)}")
         speech_id = inputs.data.get_meta("speech_id")
         speech_end = inputs.data.get_meta("avatar_speech_end", False)
         speech_text = inputs.data.get_meta("avatar_speech_text")
@@ -195,8 +202,9 @@ class HandlerAvatarLAM(HandlerBase):
             if speech_text is not None:
                 output.add_meta("avatar_speech_text", speech_text)
             dur_inference = time.monotonic() - t_start
-            logger.info(f"Inference on {audio_segment.shape[-1] / context.config.audio_sample_rate:.2f} second audio "
-                        f"finished in {dur_inference * 1000} milliseconds. Got output: {str(output)}")
+            logger.info(
+                f"Inference on {audio_segment.shape[-1] / context.config.audio_sample_rate:.2f} second audio "
+                f"finished in {dur_inference * 1000} milliseconds. Got output: {str(output)}")
             context.submit_data(output)
 
             context.last_speech_id = speech_id
