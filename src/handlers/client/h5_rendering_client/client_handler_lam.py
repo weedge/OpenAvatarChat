@@ -2,6 +2,7 @@ import asyncio
 import json
 import os.path
 from typing import Dict, Optional, cast
+import traceback
 
 import gradio
 from fastapi import FastAPI
@@ -46,16 +47,21 @@ class LamClientSessionDelegate(RtcClientSessionDelegate):
         while not self.quit.is_set():
             try:
                 chat_data: ChatData = await asyncio.wait_for(self.get_data(EngineChannelType.MOTION_DATA), timeout=0.1)
-                chat_data.data and logger.info(f"Got chat data {str(chat_data)} {str(chat_data.data)}")
+                chat_data.data and logger.info(
+                    f"Got chat data {str(chat_data)} {str(chat_data.data)}")
+                if not welcome_message_sent:
+                    welcome_message = self.motion_data_serializer.serialize(
+                        chat_data.data.definition)
+                    await websocket.send_bytes(welcome_message)
+                    welcome_message_sent = True
+                if chat_data.type == ChatDataType.AVATAR_MOTION_DATA:
+                    msg = self.motion_data_serializer.serialize(chat_data.data)
+                    await websocket.send_bytes(msg)
             except asyncio.TimeoutError:
                 continue
-            if not welcome_message_sent:
-                welcome_message = self.motion_data_serializer.serialize(chat_data.data.definition)
-                await websocket.send_bytes(welcome_message)
-                welcome_message_sent = True
-            if chat_data.type == ChatDataType.AVATAR_MOTION_DATA:
-                msg = self.motion_data_serializer.serialize(chat_data.data)
-                await websocket.send_bytes(msg)
+            except Exception as e:
+                logger.error(f"Error processing messages: {e}")
+                traceback.print_exc()
 
     async def _ws_input_task(self, websocket: WebSocket):
         while not self.quit.is_set() and websocket.client_state != WebSocketState.DISCONNECTED:
@@ -117,7 +123,8 @@ class ClientHandlerLam(ClientHandlerRtc):
             client_session_delegate_class=LamClientSessionDelegate,
         )
 
-    def load(self, engine_config: ChatEngineConfigModel, handler_config: Optional[HandlerBaseConfigModel] = None):
+    def load(self, engine_config: ChatEngineConfigModel,
+             handler_config: Optional[HandlerBaseConfigModel] = None):
         self.engine_config = engine_config
         self.handler_config = cast(ClientLamConfigModel, handler_config)
         self.prepare_rtc_definitions()
@@ -139,7 +146,8 @@ class ClientHandlerLam(ClientHandlerRtc):
             msg = f"Asset file {self.handler_config.asset_path} not found."
             raise ValueError(msg)
 
-    def on_setup_app(self, app: FastAPI, ui: gradio.blocks.Block, parent_block: Optional[gradio.blocks.Block] = None):
+    def on_setup_app(self, app: FastAPI, ui: gradio.blocks.Block,
+                     parent_block: Optional[gradio.blocks.Block] = None):
         asset_route = "/download/lam_asset"
         motion_data_route = "/ws/lam_data_stream"
 
@@ -183,11 +191,15 @@ class ClientHandlerLam(ClientHandlerRtc):
     def start_context(self, session_context: SessionContext, handler_context: HandlerContext):
         pass
 
-    def on_setup_session_delegate(self, session_context: SessionContext, handler_context: HandlerContext,
-                                  session_delegate: ClientSessionDelegate):
+    def on_setup_session_delegate(
+            self,
+            session_context: SessionContext,
+            handler_context: HandlerContext,
+            session_delegate: ClientSessionDelegate):
         super().on_setup_session_delegate(session_context, handler_context, session_delegate)
 
-    def get_handler_detail(self, session_context: SessionContext, context: HandlerContext) -> HandlerDetail:
+    def get_handler_detail(self, session_context: SessionContext,
+                           context: HandlerContext) -> HandlerDetail:
         handler_detail = self.create_handler_detail(session_context, context)
         handler_detail.inputs[ChatDataType.AVATAR_MOTION_DATA] = HandlerDataInfo(
             type=ChatDataType.AVATAR_MOTION_DATA
