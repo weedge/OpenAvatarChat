@@ -85,20 +85,20 @@ def collect_root_file(use_uv=False):
     return root_req if root_req.exists() else None
 
 
-def install_files(file_paths, use_uv=False):
+def install_files(file_paths, use_uv=False, venv=False):
     """Install dependencies from collected files"""
+    opt = "--system" if venv is False else ""
     try:
         for dep_file in file_paths:
             print(f"Installing from {dep_file}")
 
             if use_uv:
-                cmd = ["uv", "pip", "install", "-r", str(dep_file)]
+                cmd = ["uv", "pip", "install", opt, "-r", str(dep_file)]
             else:
                 cmd = [sys.executable, "-m", "pip", "install", "-r", str(dep_file)]
 
             print(f"{cmd=}")
-            result = subprocess.run(cmd, check=True, stderr=subprocess.PIPE, text=True)
-            print(result.stderr)
+            subprocess.run(cmd, check=True, stderr=subprocess.PIPE, text=True)
     except subprocess.CalledProcessError as e:
         print(f"Installation failed: {e}")
         print("err:", e.stderr)
@@ -130,5 +130,5 @@ if __name__ == "__main__":
         sys.exit(1)
 
     # Perform installation
-    install_files(install_paths, args.uv)
+    install_files(install_paths, args.uv, args.venv)
     print("Dependencies installed successfully")
