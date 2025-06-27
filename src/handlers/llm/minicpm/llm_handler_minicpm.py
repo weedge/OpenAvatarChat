@@ -77,7 +77,8 @@ class MiniCPMContext(HandlerContext):
         if self.config is None or not self.config.enable_video_input:
             return result
         while True:
-            if self.video_frame_head_cache is not None and self.video_frame_head_cache.timestamp[0] >= start_time:
+            if self.video_frame_head_cache is not None and self.video_frame_head_cache.timestamp[
+                    0] >= start_time:
                 result.append(self.video_frame_head_cache)
             self.video_frame_head_cache = None
             try:
@@ -93,7 +94,7 @@ class MiniCPMContext(HandlerContext):
             frame_skip = self.config.skip_video_frame
 
         if frame_skip is not None and frame_skip > 0:
-            return result[::frame_skip+1]
+            return result[::frame_skip + 1]
         elif frame_skip == -1:
             return result[-1:]
         else:
@@ -119,7 +120,10 @@ class HandlerS2SMiniCPM(HandlerBase, ABC):
         install_mark = os.path.join(DirectoryInfo.get_project_dir(), "auto-gptq-minicpmo")
         if os.path.isfile(install_mark):
             return
-        install_scripts = os.path.join(DirectoryInfo.get_project_dir(), "scripts", "build_auto_gptq.sh")
+        install_scripts = os.path.join(
+            DirectoryInfo.get_project_dir(),
+            "scripts",
+            "build_auto_gptq.sh")
         cmd = f"cd {DirectoryInfo.get_project_dir()} && chmod +x {install_scripts} && {install_scripts}"
         logger.warning(f"Cmd: {cmd}")
         result = os.system(cmd)
@@ -129,14 +133,15 @@ class HandlerS2SMiniCPM(HandlerBase, ABC):
             sys.path.append(auto_gptq_path)
         importlib.invalidate_caches()
 
-    def load(self, engine_config: ChatEngineConfigModel, handler_config: Optional[BaseModel] = None):
+    def load(self, engine_config: ChatEngineConfigModel,
+             handler_config: Optional[BaseModel] = None):
         model_name = "MiniCPM-o-2_6"
         if isinstance(handler_config, MiniCPMConfig):
             model_name = handler_config.model_name
         project_dir = DirectoryInfo.get_project_dir()
         model_path = os.path.join(project_dir, engine_config.model_root, model_name)
         gpu_prop = torch.cuda.get_device_properties("cuda")
-        attn_implementation="flash_attention_2" if gpu_prop.major >= 8 else "sdpa",
+        attn_implementation = "flash_attention_2" if gpu_prop.major >= 8 else "sdpa"
         logger.info(f"model_name = {model_name} {attn_implementation=}")
         if "MiniCPM-o-2_6-int4" in model_name:
             # noinspection PyUnresolvedReferences
@@ -173,7 +178,12 @@ class HandlerS2SMiniCPM(HandlerBase, ABC):
         )
         self.model.init_tts()
         self.model.to(self.device).eval()
-        ref_audio_path = os.path.join(self.handler_root, "MiniCPM-o", "assets", "ref_audios", 'default.wav')
+        ref_audio_path = os.path.join(
+            self.handler_root,
+            "MiniCPM-o",
+            "assets",
+            "ref_audios",
+            'default.wav')
         self.ref_audio, _ = librosa.load(ref_audio_path, sr=16000, mono=True)
 
     def create_context(self, session_context: SessionContext,
@@ -248,7 +258,8 @@ class HandlerS2SMiniCPM(HandlerBase, ABC):
         if max_slice_nums is not None:
             extra_params["max_slice_nums"] = max_slice_nums
         for msg in msgs:
-            logger.info(f"Prefilling session={str(context.local_session_id)}, params={extra_params}, msg={msg}")
+            logger.info(
+                f"Prefilling session={str(context.local_session_id)}, params={extra_params}, msg={msg}")
             self.model.streaming_prefill(
                 session_id=str(context.local_session_id),
                 msgs=[msg],
@@ -289,7 +300,8 @@ class HandlerS2SMiniCPM(HandlerBase, ABC):
                 segment_start_id = context.audio_prefill_slice_context.get_last_slice_start_index()
                 segment_end_id = segment_start_id + segment_size
                 video_frames = context.fetch_video_frames(segment_start_id, segment_end_id)
-                logger.info(f"Got {len(video_frames)} video frames with time {[x.timestamp[0] for x in video_frames]}")
+                logger.info(
+                    f"Got {len(video_frames)} video frames with time {[x.timestamp[0] for x in video_frames]}")
                 msg = self._create_message(audio_segment, video_frames)
                 self._do_prefill(context, [msg], max_slice_nums=1)
                 if not context.prefilling:
@@ -308,13 +320,16 @@ class HandlerS2SMiniCPM(HandlerBase, ABC):
         if remainder_audio is not None:
             segment_size = remainder_audio.shape[0]
             if segment_size < context.audio_prefill_slice_context.slice_size:
-                remainder_audio = np.concatenate(
-                    [remainder_audio,
-                     np.zeros(shape=(context.audio_prefill_slice_context.slice_size - remainder_audio.shape[0]))])
+                remainder_audio = np.concatenate([remainder_audio, np.zeros(
+                    shape=(context.audio_prefill_slice_context.slice_size - remainder_audio.shape[0]))])
             end_segment_end_id = end_segment_start_id + segment_size
             video_frames = context.fetch_video_frames(end_segment_start_id, end_segment_end_id)
-            logger.info(f"Got {len(video_frames)} video frames with time {[x.timestamp[0] for x in video_frames]}")
-            self._do_prefill(context, [self._create_message(remainder_audio, video_frames)], max_slice_nums=1)
+            logger.info(
+                f"Got {len(video_frames)} video frames with time {[x.timestamp[0] for x in video_frames]}")
+            self._do_prefill(
+                context, [
+                    self._create_message(
+                        remainder_audio, video_frames)], max_slice_nums=1)
 
         context.prefilling = False
 
