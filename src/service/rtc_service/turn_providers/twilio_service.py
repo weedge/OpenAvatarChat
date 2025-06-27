@@ -7,8 +7,8 @@ from service.rtc_service.base_turn_provider import BaseRtcTurnProvider, BaseRtcT
 
 
 class TwilioConfigData(BaseModel):
-    twilio_account_sid: str
-    twilio_auth_token: str
+    twilio_account_sid: str = ""
+    twilio_auth_token: str = ""
 
 
 class TwilioTurnEntity(BaseRtcTurnEntity):
